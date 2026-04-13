@@ -12,26 +12,26 @@ interface SystemStatusDrawerProps {
 const getStatusColor = (status: string): string => {
   switch (status) {
     case 'connected':
-      return 'text-green-600';
+      return 'text-emerald-100';
     case 'disconnected':
-      return 'text-red-600';
+      return 'text-rose-100';
     case 'error':
-      return 'text-orange-600';
+      return 'text-amber-100';
     default:
-      return 'text-gray-600';
+      return 'text-slate-200';
   }
 };
 
 const getStatusBg = (status: string): string => {
   switch (status) {
     case 'connected':
-      return 'bg-green-100';
+      return 'bg-emerald-400/15 border border-emerald-300/45';
     case 'disconnected':
-      return 'bg-red-100';
+      return 'bg-rose-400/15 border border-rose-300/45';
     case 'error':
-      return 'bg-orange-100';
+      return 'bg-amber-400/15 border border-amber-300/45';
     default:
-      return 'bg-gray-100';
+      return 'bg-slate-500/15 border border-slate-300/35';
   }
 };
 
@@ -50,17 +50,17 @@ export const SystemStatusDrawer: React.FC<SystemStatusDrawerProps> = ({
   return (
     <div className="fixed inset-0 z-50">
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      <div className="absolute right-0 top-0 bottom-0 w-96 bg-white shadow-lg overflow-y-auto">
+      <div className="absolute right-0 top-0 bottom-0 w-96 max-w-full panel-strong overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">System Status</h2>
+            <h2 className="text-2xl font-bold text-sky-50 tracking-wide">System Status</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-300 hover:text-sky-100"
             >
               ✕
             </button>
@@ -68,48 +68,42 @@ export const SystemStatusDrawer: React.FC<SystemStatusDrawerProps> = ({
 
           <div className="space-y-4">
             {/* Connection Status */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Connection</h3>
-              <div className={`${getStatusBg(status.connected ? 'connected' : 'disconnected')} ${getStatusColor(status.connected ? 'connected' : 'disconnected')} rounded p-3 text-sm font-medium`}>
-                {status.connected ? '🟢 Connected' : '🔴 Disconnected'}
+            <div className="bg-slate-900/55 rounded-xl p-4 border border-sky-200/20">
+              <h3 className="font-semibold text-slate-100 mb-3">Connection</h3>
+              <div className={`${getStatusBg(status.connected ? 'connected' : 'disconnected')} ${getStatusColor(status.connected ? 'connected' : 'disconnected')} rounded-lg p-3 text-sm font-medium`}>
+                {status.connected ? 'LINKED' : 'OFFLINE'}
               </div>
             </div>
 
             {/* Database Status */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Database</h3>
-              <div className={`${getStatusBg(status.database)} ${getStatusColor(status.database)} rounded p-3 text-sm font-medium capitalize`}>
-                {status.database === 'connected' && '🟢'}
-                {status.database === 'disconnected' && '🔴'}
-                {status.database === 'error' && '🟠'}
-                {' '}{status.database}
+            <div className="bg-slate-900/55 rounded-xl p-4 border border-sky-200/20">
+              <h3 className="font-semibold text-slate-100 mb-3">Database</h3>
+              <div className={`${getStatusBg(status.database)} ${getStatusColor(status.database)} rounded-lg p-3 text-sm font-medium uppercase tracking-wide`}>
+                {status.database}
               </div>
             </div>
 
             {/* Sensor Connection */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Sensor Connection</h3>
-              <div className={`${getStatusBg(status.sensorConnection)} ${getStatusColor(status.sensorConnection)} rounded p-3 text-sm font-medium capitalize`}>
-                {status.sensorConnection === 'connected' && '🟢'}
-                {status.sensorConnection === 'disconnected' && '🔴'}
-                {status.sensorConnection === 'error' && '🟠'}
-                {' '}{status.sensorConnection}
+            <div className="bg-slate-900/55 rounded-xl p-4 border border-sky-200/20">
+              <h3 className="font-semibold text-slate-100 mb-3">Sensor Connection</h3>
+              <div className={`${getStatusBg(status.sensorConnection)} ${getStatusColor(status.sensorConnection)} rounded-lg p-3 text-sm font-medium uppercase tracking-wide`}>
+                {status.sensorConnection}
               </div>
             </div>
 
             {/* Uptime */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Uptime</h3>
-              <p className="text-2xl font-bold text-gray-800">
+            <div className="bg-slate-900/55 rounded-xl p-4 border border-sky-200/20">
+              <h3 className="font-semibold text-slate-100 mb-3">Uptime</h3>
+              <p className="text-2xl font-bold text-cyan-100">
                 {hours}h {minutes}m {seconds}s
               </p>
-              <p className="text-xs text-gray-500 mt-2">System running time</p>
+              <p className="text-xs text-slate-400 mt-2">System running time</p>
             </div>
 
             {/* Last Update */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Last Update</h3>
-              <p className="text-sm text-gray-700">
+            <div className="bg-slate-900/55 rounded-xl p-4 border border-sky-200/20">
+              <h3 className="font-semibold text-slate-100 mb-3">Last Update</h3>
+              <p className="text-sm text-slate-300">
                 {new Date(status.lastUpdate).toLocaleString()}
               </p>
             </div>
@@ -117,7 +111,7 @@ export const SystemStatusDrawer: React.FC<SystemStatusDrawerProps> = ({
 
           <button
             onClick={onClose}
-            className="w-full mt-6 px-4 py-2 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700"
+            className="w-full mt-6 px-4 py-2.5 bg-cyan-400/20 text-cyan-100 rounded-xl font-semibold border border-cyan-300/45 hover:border-cyan-200/80"
           >
             Close
           </button>

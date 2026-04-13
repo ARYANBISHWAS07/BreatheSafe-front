@@ -32,7 +32,7 @@ const DashboardContext = createContext<DashboardContextType | undefined>(undefin
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentSensorData, setCurrentSensorData] = useState<SensorData | null>(null);
   const [healthAlerts, setHealthAlerts] = useState<HealthAlert[]>([]);
-  const [userClassification, setUserClassification] = useState<UserClassification>('adults');
+  const [userClassification, setUserClassification] = useState<UserClassification>('adult');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

@@ -21,10 +21,10 @@ export const ClassificationTabs: React.FC<ClassificationTabsProps> = ({
         <button
           key={classification}
           onClick={() => onSelect(classification)}
-          className={`whitespace-nowrap px-4 py-2 rounded-lg font-medium transition-all ${
+          className={`whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold tracking-wide transition-all ${
             selected === classification
-              ? 'bg-teal-600 text-white shadow-md'
-              : 'bg-white text-gray-700 border border-gray-200 hover:border-teal-300'
+              ? 'border-cyan-300/80 bg-cyan-400/20 text-cyan-100 shadow-[0_0_24px_-10px_rgba(60,247,255,0.9)]'
+              : 'border-sky-200/25 bg-slate-900/45 text-slate-300 hover:border-cyan-300/55 hover:text-cyan-100'
           }`}
         >
           {getClassificationDisplayName(classification)}

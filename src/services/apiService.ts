@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { API_BASE_URL, API_ENDPOINTS } from '@/config/api';
+import { API_BASE_URL, API_ENDPOINTS, getBackendStartupWarnings } from '@/config/api';
 import {
   SensorData,
   Alert,
@@ -15,12 +15,23 @@ import {
   ClassificationConfig,
   UserProfile,
 } from '@/types';
-import { normalizeSensorPayload } from '@/lib/utils';
+import {
+  normalizeSensorPayload,
+  normalizeClassificationList,
+  toBackendClassification,
+  toFrontendClassification,
+  normalizeHealthAlertPayload,
+} from '@/lib/utils';
 
 class ApiService {
   private client: AxiosInstance;
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      const startupWarnings = getBackendStartupWarnings(window.location.origin);
+      startupWarnings.forEach((warning) => console.warn(`[Config Warning] ${warning}`));
+    }
+
     this.client = axios.create({
       baseURL: API_BASE_URL,
       timeout: 10000,
@@ -34,12 +45,24 @@ class ApiService {
       (response) => response,
       (error: AxiosError) => {
         if (error.response) {
+          const responseData = error.response.data;
+          const dataSummary =
+            typeof responseData === 'string'
+              ? responseData.slice(0, 180)
+              : responseData;
+          const isHtmlResponse =
+            typeof responseData === 'string' &&
+            /<!doctype html>|<html/i.test(responseData);
+
           // Server responded with error status
           console.error('API Error:', {
             status: error.response.status,
             url: error.config?.url,
             message: error.message,
-            data: error.response.data,
+            data: dataSummary,
+            hint: isHtmlResponse
+              ? 'Received HTML instead of JSON. Check NEXT_PUBLIC_API_URL points to backend, not Next.js frontend.'
+              : undefined,
           });
         } else if (error.request) {
           // Request made but no response
@@ -202,7 +225,7 @@ class ApiService {
    */
   async getHealthAlerts(
     limit: number = 50,
-    classification?: string,
+    classification?: UserClassification,
     level?: string,
     unacknowledged: boolean = false
   ): Promise<PaginatedResponse<HealthAlert>> {
@@ -210,7 +233,7 @@ class ApiService {
       limit,
     };
 
-    if (classification) params.classification = classification;
+    if (classification) params.classification = toBackendClassification(classification);
     if (level) params.level = level;
     if (unacknowledged) params.unacknowledged = unacknowledged;
 
@@ -220,7 +243,7 @@ class ApiService {
       filter: { limit: number; unacknowledged: boolean };
     }>(API_ENDPOINTS.HEALTH_ALERTS, { params });
     return {
-      data: response.data.data,
+      data: (response.data.data || []).map((alert) => normalizeHealthAlertPayload(alert)),
     };
   }
 
@@ -234,9 +257,9 @@ class ApiService {
       success: boolean;
       data: HealthAlert[];
       filter: { limit: number; unacknowledged: boolean };
-    }>(API_ENDPOINTS.HEALTH_ALERTS_UNACKNOWLEDGED(classification));
+    }>(API_ENDPOINTS.HEALTH_ALERTS_UNACKNOWLEDGED(toBackendClassification(classification)));
     return {
-      data: response.data.data,
+      data: (response.data.data || []).map((alert) => normalizeHealthAlertPayload(alert)),
     };
   }
 
@@ -247,7 +270,7 @@ class ApiService {
     const response = await this.client.get<{ success: boolean; data: HealthAlert }>(
       API_ENDPOINTS.HEALTH_ALERT_BY_ID(id)
     );
-    return response.data.data;
+    return normalizeHealthAlertPayload(response.data.data);
   }
 
   /**
@@ -257,7 +280,7 @@ class ApiService {
     const response = await this.client.post<{ success: boolean; data: HealthAlert }>(
       API_ENDPOINTS.ACKNOWLEDGE_HEALTH_ALERT(id)
     );
-    return response.data.data;
+    return normalizeHealthAlertPayload(response.data.data);
   }
 
   /**
@@ -270,7 +293,7 @@ class ApiService {
     const response = await this.client.get<{
       success: boolean;
       data: Record<string, unknown>;
-    }>(API_ENDPOINTS.HEALTH_ALERT_STATS(classification), {
+    }>(API_ENDPOINTS.HEALTH_ALERT_STATS(toBackendClassification(classification)), {
       params: { hours },
     });
     return response.data.data;
@@ -286,7 +309,7 @@ class ApiService {
       filter: { limit: number; unacknowledged: boolean };
     }>(API_ENDPOINTS.HEALTH_ALERTS_BY_USER(userId));
     return {
-      data: response.data.data,
+      data: (response.data.data || []).map((alert) => normalizeHealthAlertPayload(alert)),
     };
   }
 
@@ -298,10 +321,10 @@ class ApiService {
   async getAvailableClassifications(): Promise<UserClassification[]> {
     const response = await this.client.get<{
       success: boolean;
-      classifications: UserClassification[];
+      classifications: string[];
       count: number;
     }>(API_ENDPOINTS.AVAILABLE_CLASSIFICATIONS);
-    return response.data.classifications;
+    return normalizeClassificationList(response.data.classifications);
   }
 
   /**
@@ -313,8 +336,12 @@ class ApiService {
     const response = await this.client.get<{
       success: boolean;
       data: ClassificationConfig;
-    }>(API_ENDPOINTS.USER_THRESHOLDS(classification));
-    return response.data.data;
+    }>(API_ENDPOINTS.USER_THRESHOLDS(toBackendClassification(classification)));
+    return {
+      ...response.data.data,
+      classification:
+        toFrontendClassification(response.data.data.classification) ?? classification,
+    };
   }
 
   // ============== USER MANAGEMENT ==============
@@ -330,9 +357,13 @@ class ApiService {
     const response = await this.client.post<UserProfile>(API_ENDPOINTS.CREATE_USER, {
       email,
       name,
-      classification,
+      classification: toBackendClassification(classification),
     });
-    return response.data;
+    return {
+      ...response.data,
+      classification:
+        toFrontendClassification(response.data.classification) ?? classification,
+    };
   }
 
   /**
@@ -343,7 +374,11 @@ class ApiService {
       const response = await this.client.get<{ success: boolean; data: UserProfile }>(
         API_ENDPOINTS.GET_USER_BY_EMAIL(email)
       );
-      return response.data.data;
+      return {
+        ...response.data.data,
+        classification:
+          toFrontendClassification(response.data.data.classification) ?? 'adult',
+      };
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         return null;
@@ -359,11 +394,24 @@ class ApiService {
     id: string,
     updates: Partial<UserProfile>
   ): Promise<UserProfile> {
+    const updatePayload: Omit<Partial<UserProfile>, 'classification'> & { classification?: string } = {
+      ...updates,
+    };
+    if (updates.classification) {
+      updatePayload.classification = toBackendClassification(updates.classification);
+    }
+
     const response = await this.client.put<UserProfile>(
       API_ENDPOINTS.UPDATE_USER(id),
-      updates
+      updatePayload
     );
-    return response.data;
+    return {
+      ...response.data,
+      classification:
+        toFrontendClassification(response.data.classification) ??
+        updates.classification ??
+        'adult',
+    };
   }
 }
 

@@ -14,38 +14,38 @@ const getLevelStyles = (level: string) => {
   switch (level) {
     case 'SAFE':
       return {
-        bg: 'bg-green-50',
-        border: 'border-green-200',
-        badge: 'bg-green-100 text-green-800',
-        icon: '✓',
+        bg: 'bg-emerald-500/10',
+        border: 'border-emerald-300/50',
+        badge: 'bg-emerald-300/20 text-emerald-100 border border-emerald-300/35',
+        icon: 'OK',
       };
     case 'CAUTION':
       return {
-        bg: 'bg-amber-50',
-        border: 'border-amber-200',
-        badge: 'bg-amber-100 text-amber-800',
-        icon: '⚠',
+        bg: 'bg-amber-500/10',
+        border: 'border-amber-300/50',
+        badge: 'bg-amber-300/20 text-amber-100 border border-amber-300/35',
+        icon: '!',
       };
     case 'WARNING':
       return {
-        bg: 'bg-orange-50',
-        border: 'border-orange-300',
-        badge: 'bg-orange-100 text-orange-800',
-        icon: '⚠',
+        bg: 'bg-orange-500/10',
+        border: 'border-orange-300/50',
+        badge: 'bg-orange-300/20 text-orange-100 border border-orange-300/35',
+        icon: '!',
       };
     case 'DANGER':
       return {
-        bg: 'bg-red-50',
-        border: 'border-red-300',
-        badge: 'bg-red-100 text-red-800',
-        icon: '!',
+        bg: 'bg-rose-500/10',
+        border: 'border-rose-300/55',
+        badge: 'bg-rose-300/20 text-rose-100 border border-rose-300/40',
+        icon: 'X',
       };
     default:
       return {
-        bg: 'bg-gray-50',
-        border: 'border-gray-200',
-        badge: 'bg-gray-100 text-gray-800',
-        icon: '•',
+        bg: 'bg-slate-500/10',
+        border: 'border-slate-300/40',
+        badge: 'bg-slate-300/20 text-slate-100 border border-slate-300/35',
+        icon: '-',
       };
   }
 };
@@ -74,33 +74,33 @@ export const HealthAlertCard: React.FC<HealthAlertCardProps> = ({
 
   return (
     <div
-      className={`${styles.bg} border-2 ${styles.border} rounded-lg p-4 mb-3 transition-all ${
+      className={`${styles.bg} border ${styles.border} rounded-2xl p-4 mb-3 transition-all backdrop-blur-sm ${
         !acknowledged ? 'animate-in fade-in slide-in-from-top-2 duration-300' : ''
       }`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-start gap-3 flex-1">
           <div
-            className={`${styles.badge} rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm flex-shrink-0 mt-0.5`}
+            className={`${styles.badge} rounded-full h-8 w-8 flex items-center justify-center font-bold text-[10px] flex-shrink-0 mt-0.5`}
           >
             {styles.icon}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-gray-800">{alert.message}</h3>
+              <h3 className="font-semibold text-slate-100">{alert.message}</h3>
               {!acknowledged && (
-                <span className="inline-block h-2 w-2 bg-red-500 rounded-full animate-pulse" />
+                <span className="inline-block h-2 w-2 bg-rose-300 rounded-full animate-pulse" />
               )}
             </div>
             {metricLabel && metricValue !== undefined && metricValue !== null && (
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-slate-300">
                 {metricLabel}: {Number(metricValue).toFixed(1)}
                 {thresholdValue !== undefined && thresholdValue !== null
                   ? ` (threshold: ${Number(thresholdValue).toFixed(1)})`
                   : ''}
               </p>
             )}
-            {alert.timestamp && <p className="text-xs text-gray-500 mt-1">{formatTime(alert.timestamp)}</p>}
+            {alert.timestamp && <p className="text-xs text-slate-400 mt-1">{formatTime(alert.timestamp)}</p>}
           </div>
         </div>
 
@@ -108,24 +108,24 @@ export const HealthAlertCard: React.FC<HealthAlertCardProps> = ({
           <button
             onClick={handleAcknowledge}
             disabled={isLoading}
-            className="ml-2 px-3 py-1 bg-white border border-gray-300 rounded text-xs font-medium hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
+            className="ml-2 px-3 py-1.5 bg-slate-900/70 border border-cyan-200/35 rounded text-xs font-semibold text-cyan-100 hover:border-cyan-200/70 disabled:opacity-50 whitespace-nowrap"
           >
             {isLoading ? 'Acknowledging...' : 'Acknowledge'}
           </button>
         )}
         {acknowledged && (
-          <span className="ml-2 text-xs text-gray-500 font-medium">Acknowledged</span>
+          <span className="ml-2 text-xs text-slate-400 font-medium">Acknowledged</span>
         )}
       </div>
 
       {/* Health Effects */}
       {healthEffects && healthEffects.length > 0 && (
-        <div className="mb-3 bg-white/50 rounded p-2">
-          <p className="text-xs font-medium text-gray-700 mb-1">Potential Health Effects:</p>
-          <ul className="text-xs text-gray-600 space-y-0.5">
+        <div className="mb-3 bg-slate-950/45 border border-sky-200/20 rounded-xl p-2.5">
+          <p className="text-xs font-medium text-slate-200 mb-1">Potential Health Effects:</p>
+          <ul className="text-xs text-slate-300 space-y-0.5">
             {healthEffects.map((effect, idx) => (
               <li key={idx} className="flex gap-2">
-                <span className="text-gray-400">•</span>
+                <span className="text-sky-300">•</span>
                 <span>{effect}</span>
               </li>
             ))}
@@ -135,20 +135,20 @@ export const HealthAlertCard: React.FC<HealthAlertCardProps> = ({
 
       {/* Recommendation */}
       {alertRecommendation && (
-        <div className="mb-3 bg-white/50 rounded p-2">
-          <p className="text-xs font-medium text-gray-700 mb-1">Recommendation:</p>
-          <p className="text-xs text-gray-600">{alertRecommendation}</p>
+        <div className="mb-3 bg-slate-950/45 border border-sky-200/20 rounded-xl p-2.5">
+          <p className="text-xs font-medium text-slate-200 mb-1">Recommendation:</p>
+          <p className="text-xs text-slate-300">{alertRecommendation}</p>
         </div>
       )}
 
       {/* Suggested Actions */}
       {recommendations.length > 0 && (
-        <div className="bg-white/50 rounded p-2">
-          <p className="text-xs font-medium text-gray-700 mb-1">Recommended Actions:</p>
-          <ul className="text-xs text-gray-600 space-y-0.5">
+        <div className="bg-slate-950/45 border border-sky-200/20 rounded-xl p-2.5">
+          <p className="text-xs font-medium text-slate-200 mb-1">Recommended Actions:</p>
+          <ul className="text-xs text-slate-300 space-y-0.5">
             {recommendations.map((action, idx) => (
               <li key={idx} className="flex gap-2">
-                <span className="text-gray-400">✓</span>
+                <span className="text-cyan-300">+</span>
                 <span>{action}</span>
               </li>
             ))}

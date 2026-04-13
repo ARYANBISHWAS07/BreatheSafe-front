@@ -6,7 +6,12 @@
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_URL, SOCKET_EVENTS } from '@/config/api';
 import { SensorData, Alert, HealthAlert, SystemStatus, UserClassification } from '@/types';
-import { normalizeSensorPayload, normalizeAlertPayload } from '@/lib/utils';
+import {
+  normalizeSensorPayload,
+  normalizeAlertPayload,
+  normalizeHealthAlertPayload,
+  toBackendClassification,
+} from '@/lib/utils';
 
 type SocketEventCallback<T> = (data: T) => void;
 type ConnectionStatusCallback = (connected: boolean) => void;
@@ -96,20 +101,22 @@ class SocketService {
           }
         });
 
-        // Health alert
-        this.socket.on(SOCKET_EVENTS.HEALTH_ALERT, (data: unknown) => {
+        const handleHealthAlertEvent = (data: unknown) => {
           try {
             if (process.env.NEXT_PUBLIC_DEBUG_RAW === 'true') {
               console.log('[Socket][raw] health-alert payload:', data);
             }
-            // health alert payloads have a nested `alert` and classification; attempt normalization
-            const normalized = normalizeAlertPayload(data);
+            const normalized = normalizeHealthAlertPayload(data);
             console.log('🟠 [Socket] Health Alert received:', normalized);
-            this.notifyHealthAlert(normalized as unknown as HealthAlert);
+            this.notifyHealthAlert(normalized);
           } catch (err) {
             console.warn('Failed to normalize health alert payload', err, data);
           }
-        });
+        };
+
+        // Health alert emits are currently inconsistent in backend, so listen to both names.
+        this.socket.on(SOCKET_EVENTS.HEALTH_ALERT, handleHealthAlertEvent);
+        this.socket.on(SOCKET_EVENTS.HEALTH_ALERT_UNDERSCORE, handleHealthAlertEvent);
 
         // System status
         this.socket.on(SOCKET_EVENTS.SYSTEM_STATUS, (data: SystemStatus) => {
@@ -197,7 +204,9 @@ class SocketService {
   subscribeHealthAlerts(classification: UserClassification): void {
     if (this.socket) {
       console.log('📡 [Socket] Subscribing to health alerts for classification:', classification);
-      this.socket.emit(SOCKET_EVENTS.SUBSCRIBE_HEALTH_ALERTS, { classification });
+      this.socket.emit(SOCKET_EVENTS.SUBSCRIBE_HEALTH_ALERTS, {
+        classification: toBackendClassification(classification),
+      });
     }
   }
 

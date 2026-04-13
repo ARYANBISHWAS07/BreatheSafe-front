@@ -9,14 +9,14 @@ interface ConnectionBadgeProps {
 
 export const ConnectionBadge: React.FC<ConnectionBadgeProps> = ({ connected, className = '' }) => {
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold tracking-[0.2em] uppercase ${connected ? 'border-emerald-300/60 bg-emerald-400/10 text-emerald-200' : 'border-rose-300/60 bg-rose-400/10 text-rose-200'} ${className}`}>
       <div
         className={`h-2 w-2 rounded-full ${
-          connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+          connected ? 'bg-emerald-300 animate-pulse' : 'bg-rose-300'
         }`}
       />
-      <span className={`text-xs font-medium ${connected ? 'text-green-600' : 'text-red-600'}`}>
-        {connected ? 'Connected' : 'Disconnected'}
+      <span>
+        {connected ? 'Linked' : 'Offline'}
       </span>
     </div>
   );

@@ -14,7 +14,7 @@ import {
 } from '@/components';
 import { useDashboard } from '@/context/DashboardContext';
 import { HealthAlert, UserClassification, SystemStatus, Alert } from '@/types';
-import { generateMockSensorData } from '@/lib/utils';
+import { FRONTEND_CLASSIFICATIONS, generateMockSensorData } from '@/lib/utils';
 
 export default function Dashboard() {
   const {
@@ -33,12 +33,9 @@ export default function Dashboard() {
 
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [showSystemStatus, setShowSystemStatus] = useState(false);
-  const [availableClassifications, setAvailableClassifications] = useState<UserClassification[]>([
-    'adults',
-    'children',
-    'elderly',
-    'asthma_patient',
-  ]);
+  const [availableClassifications, setAvailableClassifications] = useState<UserClassification[]>(
+    FRONTEND_CLASSIFICATIONS
+  );
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [acknowledgingAlertId, setAcknowledgingAlertId] = useState<string | null>(null);
 
@@ -173,37 +170,37 @@ export default function Dashboard() {
 
   if (!currentSensorData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-teal-100 animate-spin mb-4">
-            <div className="w-8 h-8 rounded-full border-4 border-teal-200 border-t-teal-600" />
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full border border-cyan-300/50 bg-cyan-300/10 animate-spin mb-4">
+            <div className="w-8 h-8 rounded-full border-4 border-cyan-200/20 border-t-cyan-200" />
           </div>
-          <p className="text-gray-600 font-medium">Loading dashboard...</p>
+          <p className="text-slate-200 font-medium">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative z-10">
       {/* Top Navigation */}
-      <nav className="sticky top-0 z-40 backdrop-blur-xl bg-white/70 border-b border-white/70 shadow-[0_20px_40px_-35px_rgba(15,23,42,0.8)]">
+      <nav className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/55 border-b border-sky-200/20 shadow-[0_20px_40px_-35px_rgba(15,23,42,0.8)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
-              <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-sky-500 via-cyan-500 to-emerald-400 text-white flex items-center justify-center shadow-lg">
-                🌍
+              <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-cyan-300/30 via-sky-400/20 to-lime-300/20 text-cyan-100 flex items-center justify-center shadow-lg border border-cyan-200/40">
+                AQ
               </div>
               <div>
-                <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">Air Quality Dashboard</h1>
-                <p className="text-xs text-slate-500">Real-time environmental intelligence & sensor health</p>
+                <h1 className="text-3xl font-semibold text-slate-50 tracking-tight">Air Quality Command Grid</h1>
+                <p className="text-xs text-slate-300">Real-time environmental intelligence and sensor health</p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => setShowSystemStatus(true)}
-                className="px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-semibold shadow-md shadow-slate-900/30 hover:bg-slate-800 transition-colors"
+                className="px-4 py-2 rounded-full border border-cyan-300/50 bg-cyan-400/15 text-cyan-100 text-sm font-semibold shadow-md shadow-cyan-900/30 hover:border-cyan-200/80 transition-colors"
               >
                 System Status
               </button>
@@ -218,12 +215,12 @@ export default function Dashboard() {
         {/* Classification Selector */}
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-[0.3em]">
+            <h2 className="text-sm font-semibold text-sky-100 uppercase tracking-[0.3em]">
               User Classification
             </h2>
-            <span className="text-xs text-slate-500">Adaptive thresholds by user group</span>
+            <span className="text-xs text-slate-300">Adaptive thresholds by age and health class</span>
           </div>
-          <div className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-2xl p-3 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.6)]">
+          <div className="panel rounded-2xl p-3">
             <ClassificationTabs
               classifications={availableClassifications}
               selected={userClassification}
@@ -245,10 +242,10 @@ export default function Dashboard() {
         {/* Metric Grid */}
         <section className="mb-10">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-[0.3em]">
+            <h2 className="text-sm font-semibold text-sky-100 uppercase tracking-[0.3em]">
               Live Sensor Readings
             </h2>
-            <span className="text-xs text-slate-500">Latest stream from devices</span>
+            <span className="text-xs text-slate-300">Latest stream from devices</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
             <MetricCard
@@ -256,52 +253,52 @@ export default function Dashboard() {
               value={currentSensorData.pm25}
               unit="µg/m³"
               type="number"
-              icon="💨"
+              icon="P2"
             />
             <MetricCard
               label="Air Quality Index"
               value={currentSensorData.aqi}
               unit=""
               type="aqi"
-              icon="📊"
+              icon="AQ"
             />
             <MetricCard
               label="Temperature"
               value={currentSensorData.temperature}
               unit="°C"
-              icon="🌡️"
+              icon="T"
             />
             <MetricCard
               label="Humidity"
               value={currentSensorData.humidity}
               unit="%"
-              icon="💧"
+              icon="H"
             />
             <MetricCard
               label="MQ135 PPM"
               value={currentSensorData.mq135_ppm}
               unit="ppm"
-              icon="⚗️"
+              icon="M"
             />
             <MetricCard
               label="Corrected PPM"
               value={currentSensorData.correctedPPM}
               unit="ppm"
-              icon="⚗️"
+              icon="C"
             />
             <MetricCard
               label="ACI"
               value={currentSensorData.aci}
               unit=""
               type="percentage"
-              icon="📈"
+              icon="A"
             />
             <MetricCard
               label="UAQS"
               value={currentSensorData.uaqs}
               unit=""
               type="percentage"
-              icon="📊"
+              icon="U"
             />
           </div>
         </section>
@@ -309,24 +306,24 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Health Alerts Panel */}
           <section className="lg:col-span-2">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
+            <h2 className="text-sm font-semibold text-sky-100 uppercase tracking-wide mb-4">
               Health Alerts
             </h2>
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="panel rounded-2xl shadow p-6">
               {healthAlerts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="text-4xl mb-2">✓</div>
-                  <p className="text-gray-600 font-medium">No active health alerts</p>
-                  <p className="text-sm text-gray-500">Your air quality is safe for this classification</p>
+                  <div className="text-4xl mb-2 text-emerald-300">OK</div>
+                  <p className="text-slate-100 font-medium">No active health alerts</p>
+                  <p className="text-sm text-slate-300">Current air quality is safe for this classification</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[34rem] overflow-y-auto pr-1">
                   {healthAlerts.map((alert) => (
                     <HealthAlertCard
-                      key={alert.id}
+                      key={alert.id ?? alert._id ?? `${alert.timestamp}-${alert.message}`}
                       alert={alert}
                       onAcknowledge={handleAcknowledgeHealthAlert}
-                      isLoading={acknowledgingAlertId === alert.id}
+                      isLoading={acknowledgingAlertId === (alert.id ?? alert._id)}
                     />
                   ))}
                 </div>
@@ -336,16 +333,18 @@ export default function Dashboard() {
 
           {/* Alerts Summary */}
           <section>
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
+            <h2 className="text-sm font-semibold text-sky-100 uppercase tracking-wide mb-4">
               Recent System Alerts
             </h2>
-            <div className="bg-white rounded-lg shadow p-6">
-              <AlertsFeed
-                alerts={alerts}
-                onAcknowledge={handleAcknowledgeAlert}
-                isLoading={acknowledgingAlertId !== null}
-                maxItems={5}
-              />
+            <div className="panel rounded-2xl shadow p-6">
+              <div className="max-h-[34rem] overflow-y-auto pr-1">
+                <AlertsFeed
+                  alerts={alerts}
+                  onAcknowledge={handleAcknowledgeAlert}
+                  isLoading={acknowledgingAlertId !== null}
+                  maxItems={50}
+                />
+              </div>
             </div>
           </section>
         </div>
@@ -359,10 +358,10 @@ export default function Dashboard() {
       />
 
       {/* Footer */}
-      <footer className="mt-16 border-t border-gray-200 bg-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-600 text-sm">
+      <footer className="mt-16 border-t border-sky-200/20 bg-slate-950/40 py-8 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-300 text-sm">
           <p>Air Quality Monitoring Dashboard • Real-time data updates every minute</p>
-          <p className="mt-2 text-gray-500">
+          <p className="mt-2 text-slate-400">
             For health concerns, please consult with a healthcare professional
           </p>
         </div>

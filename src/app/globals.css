@@ -1,32 +1,64 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-0: #05070d;
+  --bg-1: #0a1020;
+  --bg-2: #0d1a34;
+  --ink-0: #e8f6ff;
+  --ink-1: #a7bfd4;
+  --line: rgba(145, 191, 255, 0.2);
+  --accent-cyan: #3cf7ff;
+  --accent-lime: #78ff6e;
+  --accent-red: #ff5b8a;
+  --accent-amber: #ffc857;
+  --panel: rgba(6, 15, 30, 0.65);
+  --panel-strong: rgba(8, 22, 42, 0.84);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-0);
+  --color-foreground: var(--ink-0);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background:
-    radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 45%),
-    radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.18), transparent 40%),
-    radial-gradient(circle at 80% 10%, rgba(59, 130, 246, 0.2), transparent 45%),
-    var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', 'SF Pro Display', 'Segoe UI', Arial, Helvetica, sans-serif;
+  background-color: #060d1c;
+  background-image: radial-gradient(120% 90% at 50% -10%, rgba(21, 54, 108, 0.22), transparent 60%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--ink-0);
+  font-family: "Space Grotesk", "Sora", "Eurostile", "Bank Gothic", "Arial Narrow", sans-serif;
   min-height: 100vh;
 }
 
+* {
+  scrollbar-color: rgba(110, 163, 255, 0.5) rgba(12, 24, 45, 0.8);
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(60, 247, 255, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(60, 247, 255, 0);
+  }
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 22px 60px -42px rgba(39, 165, 255, 0.6);
+}
+
+.panel-strong {
+  background: var(--panel-strong);
+  border: 1px solid rgba(122, 180, 255, 0.3);
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 70px -45px rgba(54, 202, 255, 0.8);
+}
+
+.text-dim {
+  color: var(--ink-1);
+}

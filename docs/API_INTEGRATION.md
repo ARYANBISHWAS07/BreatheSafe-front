@@ -2,7 +2,7 @@
 
 ## API Endpoints Expected
 
-The dashboard expects these endpoints on your backend API (default: `http://localhost:3001`).
+The dashboard expects these endpoints on your backend API (default: `http://localhost:3000`).
 
 ### Sensor Data Endpoints
 

@@ -112,8 +112,11 @@ export interface AlertStats {
   };
 }
 
-// User classification types
-export type UserClassification = 'asthma_patient' | 'children' | 'elderly' | 'adults';
+// User classification types used in the frontend
+export type UserClassification = 'asthma' | 'child' | 'old' | 'adult';
+
+// Backend classification types exposed by existing APIs
+export type BackendUserClassification = 'asthma_patient' | 'children' | 'elderly' | 'adults';
 
 export interface ClassificationThreshold {
   metric: string;

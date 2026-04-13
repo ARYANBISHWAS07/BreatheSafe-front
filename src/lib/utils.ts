@@ -2,7 +2,72 @@
  * Utility functions for the dashboard
  */
 
-import { HealthAlert, UserClassification, SensorData, Alert } from '@/types';
+import {
+  HealthAlert,
+  UserClassification,
+  SensorData,
+  Alert,
+  BackendUserClassification,
+} from '@/types';
+
+export const FRONTEND_CLASSIFICATIONS: UserClassification[] = ['child', 'adult', 'old', 'asthma'];
+
+const FRONTEND_TO_BACKEND_CLASSIFICATION: Record<UserClassification, BackendUserClassification> = {
+  child: 'children',
+  adult: 'adults',
+  old: 'elderly',
+  asthma: 'asthma_patient',
+};
+
+const BACKEND_TO_FRONTEND_CLASSIFICATION: Record<BackendUserClassification, UserClassification> = {
+  children: 'child',
+  adults: 'adult',
+  elderly: 'old',
+  asthma_patient: 'asthma',
+};
+
+/**
+ * Convert frontend classification to backend enum
+ */
+export const toBackendClassification = (
+  classification: UserClassification
+): BackendUserClassification => {
+  return FRONTEND_TO_BACKEND_CLASSIFICATION[classification];
+};
+
+/**
+ * Convert backend or legacy classification to frontend enum
+ */
+export const toFrontendClassification = (
+  classification: string | null | undefined
+): UserClassification | undefined => {
+  if (!classification) return undefined;
+
+  if ((FRONTEND_CLASSIFICATIONS as string[]).includes(classification)) {
+    return classification as UserClassification;
+  }
+
+  return BACKEND_TO_FRONTEND_CLASSIFICATION[classification as BackendUserClassification];
+};
+
+/**
+ * Normalize a list of backend classifications into frontend-safe values.
+ */
+export const normalizeClassificationList = (
+  classifications: Array<string | UserClassification | BackendUserClassification> | undefined
+): UserClassification[] => {
+  if (!classifications || classifications.length === 0) {
+    return FRONTEND_CLASSIFICATIONS;
+  }
+
+  const normalized = classifications
+    .map((value) => toFrontendClassification(String(value)))
+    .filter((value): value is UserClassification => Boolean(value));
+
+  return normalized.length > 0
+    ? Array.from(new Set(normalized))
+    : FRONTEND_CLASSIFICATIONS;
+};
 
 /**
  * Get severity level and color based on AQI value
@@ -126,10 +191,10 @@ export const getHealthAlertIcon = (level: string): string => {
  */
 export const getClassificationDisplayName = (classification: UserClassification): string => {
   const names: Record<UserClassification, string> = {
-    asthma_patient: 'Asthma Patient',
-    children: 'Children',
-    elderly: 'Elderly',
-    adults: 'Adults',
+    asthma: 'Asthma',
+    child: 'Child',
+    old: 'Old',
+    adult: 'Adult',
   };
   return names[classification] || classification;
 };
@@ -139,10 +204,10 @@ export const getClassificationDisplayName = (classification: UserClassification)
  */
 export const getClassificationDescription = (classification: UserClassification): string => {
   const descriptions: Record<UserClassification, string> = {
-    asthma_patient: 'Specialized thresholds for individuals with respiratory conditions',
-    children: "Lower thresholds for children's developing lungs",
-    elderly: 'Thresholds for seniors with age-related sensitivities',
-    adults: 'Standard thresholds for healthy adults',
+    asthma: 'Specialized thresholds for users with respiratory sensitivities',
+    child: "Lower thresholds for children's developing lungs",
+    old: 'Thresholds tuned for age-related sensitivity',
+    adult: 'Standard thresholds for healthy adults',
   };
   return descriptions[classification] || '';
 };
@@ -302,6 +367,9 @@ export const normalizeAlertPayload = (payload: unknown): Alert => {
     level: alert.level ?? alert.severity ?? 'MODERATE',
     type: alert.type ?? alert.alertType ?? 'AIR_QUALITY_ALERT',
     message: alert.message ?? alert.title ?? '',
+    classification: toFrontendClassification(
+      String((alert.classification as string | undefined) ?? (p.classification as string | undefined) ?? '')
+    ),
   triggerValues: normalizedTrigger,
   exposureMetrics: (alert.exposureMetrics as Record<string, unknown>) ?? { exposure1h: 0, exposure3h: 0, cumulativeExposure: 0 },
   riskAssessment: (alert.riskAssessment as Record<string, unknown>) ?? { healthImplication: '', recommendation: '' },
@@ -313,4 +381,63 @@ export const normalizeAlertPayload = (payload: unknown): Alert => {
   } as unknown as Alert;
 
   return normalized;
+};
+
+/**
+ * Normalize incoming health alert payloads from server into frontend HealthAlert shape.
+ * Supports direct payloads and wrapped payloads with nested `alert`.
+ */
+export const normalizeHealthAlertPayload = (payload: unknown): HealthAlert => {
+  const p = (payload as Record<string, unknown>) || {};
+  const alert = ((p.alert as Record<string, unknown>) || p) as Record<string, unknown>;
+
+  const toNumberOrUndefined = (value: unknown): number | undefined => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+
+  const breachedMetricsRaw = Array.isArray(alert.breachedMetrics)
+    ? (alert.breachedMetrics as Array<Record<string, unknown>>)
+    : undefined;
+
+  const breachedMetrics = breachedMetricsRaw?.map((metric) => ({
+    metric: String(metric.metric ?? ''),
+    value: Number(metric.value ?? 0),
+    severity: metric.severity ? String(metric.severity) : undefined,
+    threshold: toNumberOrUndefined(metric.threshold),
+  }));
+
+  const primaryBreach = breachedMetrics?.[0];
+  const timestampSource = alert.timestamp ?? alert.createdAt ?? Date.now();
+  const timestamp =
+    typeof timestampSource === 'number'
+      ? new Date(timestampSource).toISOString()
+      : new Date(String(timestampSource)).toISOString();
+
+  return {
+    _id: alert._id ? String(alert._id) : undefined,
+    id: alert.id ? String(alert.id) : alert._id ? String(alert._id) : undefined,
+    classification: toFrontendClassification(
+      String((alert.classification as string | undefined) ?? (p.classification as string | undefined) ?? '')
+    ),
+    timestamp,
+    level: String(alert.level ?? alert.severity ?? 'MODERATE') as HealthAlert['level'],
+    metric: String(primaryBreach?.metric ?? alert.metric ?? ''),
+    value: primaryBreach?.value ?? toNumberOrUndefined(alert.value),
+    threshold: primaryBreach?.threshold ?? toNumberOrUndefined(alert.threshold),
+    message: String(alert.message ?? alert.title ?? 'Health alert'),
+    recommendation: alert.recommendation ? String(alert.recommendation) : undefined,
+    recommendations: alert.recommendations ? String(alert.recommendations) : undefined,
+    healthEffects: Array.isArray(alert.healthEffects)
+      ? (alert.healthEffects as string[])
+      : undefined,
+    potentialHealthEffects: Array.isArray(alert.potentialHealthEffects)
+      ? (alert.potentialHealthEffects as string[])
+      : undefined,
+    breachedMetrics,
+    riskAssessment: alert.riskAssessment as HealthAlert['riskAssessment'],
+    acknowledged: Boolean(alert.acknowledged),
+    isAcknowledged: Boolean(alert.isAcknowledged ?? alert.acknowledged),
+    acknowledgedAt: alert.acknowledgedAt ? String(alert.acknowledgedAt) : undefined,
+  };
 };
