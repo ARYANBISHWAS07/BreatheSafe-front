@@ -1,33 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Air Quality Monitoring Dashboard
+
+A modern, production-quality responsive frontend for an Air Quality Monitoring Service dashboard. This application connects to a Node.js backend with REST APIs and Socket.IO for real-time updates.
+
+## Features
+
+### Core Functionality
+- **Real-time Dashboard**: Live sensor data with Socket.IO updates
+- **Classification System**: Tailored thresholds and alerts for different user types (asthma patients, children, elderly, adults)
+- **Health Alert Feed**: Prominent, actionable health alerts with acknowledge functionality
+- **Alert History & Statistics**: Track and analyze air quality trends
+- **User Profile Management**: Manage classification preferences
+- **System Connection Status**: Monitor backend and socket health
+
+### User Classifications
+- **Asthma Patient**: Specialized thresholds for respiratory conditions
+- **Children**: Lower thresholds for developing lungs
+- **Elderly**: Sensitivities appropriate for older adults
+- **Adults**: Standard thresholds for healthy adults
+
+## Tech Stack
+
+- **Framework**: Next.js 14+ with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Real-time**: Socket.IO
+- **HTTP Client**: Axios
+- **Charts**: Recharts
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
 
 ## Getting Started
 
-First, run the development server:
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000/dashboard` in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Environment Configuration
 
-To learn more about Next.js, take a look at the following resources:
+Create a `.env.local` file:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
+
+```
+src/
+├── app/              # Next.js app router pages
+├── components/       # Reusable React components
+├── config/          # Configuration & constants
+├── context/         # React Context for state management
+├── lib/             # Utility functions
+├── services/        # API & Socket.IO service layers
+├── types/           # TypeScript type definitions
+```
+
+## Key Features
+
+- **Mobile-first, responsive design** optimized for all devices
+- **Real-time sensor updates** via Socket.IO WebSockets
+- **Health-based classifications** with tailored thresholds
+- **Visual severity indicators** for air quality levels
+- **System status monitoring** showing connection health
+- **Graceful error handling** with mock data fallback
+- **Accessible UI** with semantic HTML and ARIA labels
+
+## Backend Integration
+
+The dashboard expects a Node.js backend with:
+
+- REST API endpoints at `/api/*`
+- Socket.IO server on same URL
+- Support for WebSocket connections
+- Real-time event emission for sensor updates and alerts
+
+See the API contract in `src/config/api.ts` for all required endpoints and events.
+
+## For More Information
+
+- See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for detailed component architecture
+- Check [docs/API_INTEGRATION.md](./docs/API_INTEGRATION.md) for backend integration details
+- Review [docs/STATE_MANAGEMENT.md](./docs/STATE_MANAGEMENT.md) for state management patterns
+
+## License
+
+MIT
 
 ## Deploy on Vercel
 
