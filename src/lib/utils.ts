@@ -234,16 +234,21 @@ export const getTrend = (current: number, previous: number): {
  */
 export const generateMockSensorData = () => {
   const now = new Date();
+  const aqi = Math.floor(Math.random() * 500) + 1;
+  const aci = Math.round((Math.random() * 500) * 10) / 10;
+  const uaqs = Math.round((Math.random() * 500) * 10) / 10;
+  const mqScore = Math.floor(Math.random() * 800) + 100;
   return {
     id: Math.random().toString(36).substr(2, 9),
     timestamp: now.toISOString(),
     pm25: Math.floor(Math.random() * 150) + 5,
-    aqi: Math.floor(Math.random() * 200) + 10,
-    mq135_ppm: Math.floor(Math.random() * 800) + 100,
+    aqi,
+    mq_score: mqScore,
+    mq135_ppm: mqScore,
     correctedPPM: Math.floor(Math.random() * 600) + 80,
-    aci: Math.random() * 100,
-    uaqs: Math.random() * 100,
-    cri: Math.random() * 100,
+    aci,
+    uaqs,
+    cri: Math.round((Math.random() * 100) * 10) / 10,
     temperature: Math.round((Math.random() * 15 + 15) * 10) / 10,
     humidity: Math.round((Math.random() * 40 + 30) * 10) / 10,
     lastUpdated: now.toISOString(),
@@ -301,7 +306,8 @@ export const normalizeSensorPayload = (payload: unknown): SensorData => {
   // Normalize timestamp: backend may send epoch ms or seconds; if numeric and less than 1e12 assume seconds and convert
   let ts: Date;
   if (typeof timestampVal === 'number') {
-    const maybeMs = timestampVal < 1e12 ? timestampVal * 1000 : timestampVal;
+    const maybeMs =
+      timestampVal < 1e8 ? Date.now() : timestampVal < 1e12 ? timestampVal * 1000 : timestampVal;
     ts = new Date(maybeMs);
   } else {
     ts = new Date(String(timestampVal ?? Date.now()));
@@ -309,16 +315,23 @@ export const normalizeSensorPayload = (payload: unknown): SensorData => {
 
   const toNumber = (v: unknown) => (v === undefined || v === null ? NaN : Number(v));
 
+  const mqScore = toNumber(
+    top.mq_score ?? top.mq ?? inner.mq_score ?? inner.mq ?? null
+  );
+
+  const mq135 = toNumber(
+    top.mq135_ppm ?? inner.mq135_ppm ?? inner.mq135PPM ?? inner.mq135 ?? null
+  );
+
   const normalized: SensorData = {
     // SensorData types expect timestamp and lastUpdated as strings in this project
     timestamp: ts.toISOString(),
     lastUpdated: ts.toISOString(),
     pm25: toNumber(top.pm25 ?? inner.pm25),
     aqi: toNumber(top.aqi ?? inner.aqi),
-    // Support common backend aliases: mq_score, mq135, corrected_ppm, temp
-    mq135_ppm: toNumber(
-      top.mq135_ppm ?? top.mq_score ?? inner.mq135_ppm ?? inner.mq135PPM ?? inner.mq135 ?? null
-    ),
+    // Support primary `mq_score` with legacy fallback `mq135_ppm`
+    mq_score: Number.isFinite(mqScore) ? mqScore : Number.isFinite(mq135) ? mq135 : NaN,
+    mq135_ppm: Number.isFinite(mq135) ? mq135 : Number.isFinite(mqScore) ? mqScore : NaN,
     correctedPPM: toNumber(top.correctedPPM ?? top.corrected_ppm ?? inner.correctedPPM ?? inner.corrected_ppm),
     aci: toNumber(top.aci ?? inner.aci),
     uaqs: toNumber(top.uaqs ?? inner.uaqs),
@@ -348,15 +361,30 @@ export const normalizeAlertPayload = (payload: unknown): Alert => {
   const trigger = (alert.triggerValues as Record<string, unknown>) || (alert.trigger as Record<string, unknown>) || {};
 
   const triggerTimestamp = trigger.timestamp || alert.createdAt || Date.now();
-  const ts = typeof triggerTimestamp === 'number' ? new Date(triggerTimestamp) : new Date(String(triggerTimestamp));
+  const normalizedTriggerTimestamp =
+    typeof triggerTimestamp === 'number'
+      ? triggerTimestamp < 1e8
+        ? Date.now()
+        : triggerTimestamp < 1e12
+          ? triggerTimestamp * 1000
+          : triggerTimestamp
+      : triggerTimestamp;
+  const ts = new Date(String(normalizedTriggerTimestamp));
 
   const normalizedTrigger = {
     pm25: Number((trigger.pm25 as unknown) ?? (trigger['pm25'] as unknown) ?? NaN),
     aqi: Number((trigger.aqi as unknown) ?? (trigger['aqi'] as unknown) ?? NaN),
-    mq135PPM: Number((trigger.mq135_ppm as unknown) ?? (trigger.mq135PPM as unknown) ?? NaN),
+    mq_score: Number((trigger.mq_score as unknown) ?? (trigger.mq as unknown) ?? NaN),
+    mq135_ppm: Number(
+      (trigger.mq135_ppm as unknown) ?? (trigger.mq135PPM as unknown) ?? (trigger.mq_score as unknown) ?? NaN
+    ),
+    mq135PPM: Number(
+      (trigger.mq135PPM as unknown) ?? (trigger.mq135_ppm as unknown) ?? (trigger.mq_score as unknown) ?? NaN
+    ),
     aci: Number((trigger.aci as unknown) ?? NaN),
     uaqs: Number((trigger.uaqs as unknown) ?? NaN),
     ucri: Number((trigger.cri as unknown) ?? (trigger.ucri as unknown) ?? NaN),
+    cri: Number((trigger.cri as unknown) ?? (trigger.ucri as unknown) ?? NaN),
     temperature: Number((trigger.temperature as unknown) ?? NaN),
     humidity: Number((trigger.humidity as unknown) ?? NaN),
     timestamp: ts.toISOString(),
@@ -366,7 +394,15 @@ export const normalizeAlertPayload = (payload: unknown): Alert => {
     _id: alert._id ?? alert.id ?? String(Math.random()),
     level: alert.level ?? alert.severity ?? 'MODERATE',
     type: alert.type ?? alert.alertType ?? 'AIR_QUALITY_ALERT',
+    title: alert.title ? String(alert.title) : undefined,
     message: alert.message ?? alert.title ?? '',
+    recommendations: alert.recommendations ? String(alert.recommendations) : undefined,
+    potentialHealthEffects: Array.isArray(alert.potentialHealthEffects)
+      ? (alert.potentialHealthEffects as string[])
+      : undefined,
+    breachedMetrics: Array.isArray(alert.breachedMetrics)
+      ? (alert.breachedMetrics as Alert['breachedMetrics'])
+      : undefined,
     classification: toFrontendClassification(
       String((alert.classification as string | undefined) ?? (p.classification as string | undefined) ?? '')
     ),
@@ -411,7 +447,13 @@ export const normalizeHealthAlertPayload = (payload: unknown): HealthAlert => {
   const timestampSource = alert.timestamp ?? alert.createdAt ?? Date.now();
   const timestamp =
     typeof timestampSource === 'number'
-      ? new Date(timestampSource).toISOString()
+      ? new Date(
+          timestampSource < 1e8
+            ? Date.now()
+            : timestampSource < 1e12
+              ? timestampSource * 1000
+              : timestampSource
+        ).toISOString()
       : new Date(String(timestampSource)).toISOString();
 
   return {
@@ -420,6 +462,10 @@ export const normalizeHealthAlertPayload = (payload: unknown): HealthAlert => {
     classification: toFrontendClassification(
       String((alert.classification as string | undefined) ?? (p.classification as string | undefined) ?? '')
     ),
+    classificationDisplayName: alert.classificationDisplayName
+      ? String(alert.classificationDisplayName)
+      : undefined,
+    title: alert.title ? String(alert.title) : undefined,
     timestamp,
     level: String(alert.level ?? alert.severity ?? 'MODERATE') as HealthAlert['level'],
     metric: String(primaryBreach?.metric ?? alert.metric ?? ''),

@@ -275,9 +275,9 @@ export default function Dashboard() {
               icon="H"
             />
             <MetricCard
-              label="MQ135 PPM"
-              value={currentSensorData.mq135_ppm}
-              unit="ppm"
+              label="Gas Score"
+              value={currentSensorData.mq_score ?? currentSensorData.mq135_ppm}
+              unit=""
               icon="M"
             />
             <MetricCard

@@ -68,16 +68,28 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-medium text-slate-100">{alert.message}</h4>
+              <h4 className="font-medium text-slate-100">{alert.title ?? alert.message}</h4>
               <span className={`text-xs font-semibold ${getLevelColor(alert.level)}`}>{alert.level}</span>
             </div>
+            {alert.title && alert.message && (
+              <p className="text-xs text-slate-300 mb-1">{alert.message}</p>
+            )}
             <div className="space-y-1 mb-2">
               {alert.triggerValues && (
                 <p className="text-sm text-slate-300">
+                  AQI: {alert.triggerValues.aqi?.toFixed(1) || 'N/A'} | 
                   UAQS: {alert.triggerValues.uaqs?.toFixed(1) || 'N/A'} | 
-                  MQ135: {alert.triggerValues.mq135PPM?.toFixed(2) || 'N/A'} PPM | 
-                  UCRI: {alert.triggerValues.ucri?.toFixed(1) || 'N/A'}
+                  Gas Score: {(alert.triggerValues.mq_score ?? alert.triggerValues.mq135_ppm ?? alert.triggerValues.mq135PPM)?.toFixed(2) || 'N/A'} | 
+                  CRI: {(alert.triggerValues.cri ?? alert.triggerValues.ucri)?.toFixed(1) || 'N/A'}
                 </p>
+              )}
+              {alert.potentialHealthEffects && alert.potentialHealthEffects.length > 0 && (
+                <p className="text-xs text-slate-400">
+                  Effects: {alert.potentialHealthEffects.slice(0, 2).join(', ')}
+                </p>
+              )}
+              {alert.recommendations && (
+                <p className="text-xs text-slate-400 italic">{alert.recommendations}</p>
               )}
               {alert.riskAssessment && (
                 <p className="text-xs text-slate-400 italic">{alert.riskAssessment.recommendation}</p>

@@ -8,6 +8,7 @@ export interface SensorReading {
   timestamp: string;
   pm25: number;
   aqi: number;
+  mq_score?: number;
   mq135_ppm: number;
   correctedPPM: number;
   aci: number;
@@ -15,6 +16,9 @@ export interface SensorReading {
   cri: number;
   temperature: number;
   humidity: number;
+  exposure?: number;
+  average_1h_UAQS?: number;
+  average_3h_UAQS?: number;
 }
 
 export interface SensorData extends SensorReading {
@@ -41,6 +45,7 @@ export interface Alert {
   triggerValues: {
     pm25?: number;
     aqi?: number;
+    mq_score?: number;
     mq135PPM?: number;
     mq135_ppm?: number;
     aci?: number;
@@ -75,6 +80,8 @@ export interface HealthAlert {
   _id?: string;
   id?: string;
   classification?: UserClassification;
+  classificationDisplayName?: string;
+  title?: string;
   timestamp?: string;
   level: 'LOW' | 'MODERATE' | 'HIGH' | 'SAFE' | 'CAUTION' | 'WARNING' | 'DANGER';
   metric?: string;

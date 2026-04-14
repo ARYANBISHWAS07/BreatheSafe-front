@@ -60,7 +60,11 @@ export const HealthAlertCard: React.FC<HealthAlertCardProps> = ({
   const acknowledged = alert.acknowledged ?? alert.isAcknowledged ?? false;
   const alertId = alert.id ?? alert._id ?? '';
   const primaryBreach = alert.breachedMetrics?.[0];
-  const metricLabel = primaryBreach?.metric ?? alert.metric;
+  const rawMetricLabel = primaryBreach?.metric ?? alert.metric;
+  const metricLabel =
+    rawMetricLabel && ['mq_score', 'mq135_ppm', 'mq135PPM', 'mq'].includes(rawMetricLabel)
+      ? 'Gas Score'
+      : rawMetricLabel;
   const metricValue = primaryBreach?.value ?? alert.value;
   const thresholdValue = primaryBreach?.threshold ?? alert.threshold;
   const alertRecommendation =
@@ -87,11 +91,19 @@ export const HealthAlertCard: React.FC<HealthAlertCardProps> = ({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-slate-100">{alert.message}</h3>
+              <h3 className="font-semibold text-slate-100">{alert.title ?? alert.message}</h3>
               {!acknowledged && (
                 <span className="inline-block h-2 w-2 bg-rose-300 rounded-full animate-pulse" />
               )}
             </div>
+            {alert.title && alert.message && (
+              <p className="text-xs text-slate-300 mb-1">{alert.message}</p>
+            )}
+            {alert.classificationDisplayName && (
+              <p className="text-xs text-slate-400 mb-1">
+                For: {alert.classificationDisplayName}
+              </p>
+            )}
             {metricLabel && metricValue !== undefined && metricValue !== null && (
               <p className="text-xs text-slate-300">
                 {metricLabel}: {Number(metricValue).toFixed(1)}
